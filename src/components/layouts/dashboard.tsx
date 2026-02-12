@@ -1,10 +1,11 @@
 "use client";
 
 import { Box, Flex, IconButton, useBreakpointValue, useDisclosure } from "@chakra-ui/react";
-import { ChevronLeftIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { ChevronLeftIcon} from "@chakra-ui/icons";
 import { useState } from "react";
 import SidebarContent from "./sidebar";
 import Header from "./header";
+import { HamburgerIcon } from "@/assets/icons/iconsItems";
 
 export default function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -29,6 +30,7 @@ export default function DashboardLayout() {
             top="4"
             left="4"
             zIndex="1000"
+            bg="white"
             onClick={() => setOpen(true)}
           >
             <HamburgerIcon />
@@ -37,7 +39,6 @@ export default function DashboardLayout() {
           <Box
             position="fixed"
             inset="0"
-            bg="blackAlpha.600"
             opacity={open ? 1 : 0}
             transition="opacity 0.25s ease"
             pointerEvents={open ? "auto" : "none"}
@@ -51,7 +52,7 @@ export default function DashboardLayout() {
             left="0"
             h="100vh"
             w="260px"
-            bg="gray.900"
+            bg="white"
             color="white"
             boxShadow="xl"
             transform={open ? "translateX(0)" : "translateX(-100%)"}
@@ -60,9 +61,9 @@ export default function DashboardLayout() {
             display="flex"
             flexDirection="column"
           >
-            <Flex justify="flex-end" p="3">
-              <IconButton aria-label="Close menu" size="sm" onClick={() => setOpen(false)}>
-                <ChevronLeftIcon />
+            <Flex justify="flex-end" p="3" width="100%">
+              <IconButton aria-label="Close menu" bg="white" color="black" size="lg" onClick={() => setOpen(false)}>
+                <ChevronLeftIcon/>
               </IconButton>
             </Flex>
 
