@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardLayout from "../components/layouts/dashboard";
+import DashboardLayout from "../page/dashboard";
 
 export default function Home() {
   return (

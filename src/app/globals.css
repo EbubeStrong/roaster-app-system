@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Support next-themes class switching */
+html.light {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* Ensure app root fills viewport so sidebar 100vh aligns correctly */
+html, body, #__next {
+  height: 100%;
+}

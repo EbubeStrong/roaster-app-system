@@ -2,14 +2,15 @@
 
 import { Box, Flex, IconButton, useBreakpointValue, useDisclosure } from "@chakra-ui/react";
 import { ChevronLeftIcon} from "@chakra-ui/icons";
-import { useState } from "react";
-import SidebarContent from "./sidebar";
-import Header from "./header";
+import React, { useState } from "react";
+import SidebarContent from "../components/layouts/sidebar";
+import Header from "../components/layouts/header";
 import { HamburgerIcon } from "@/assets/icons/iconsItems";
+import RoasterContent from "@/components/roaster-content";
 
 export default function DashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { open, setOpen } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
@@ -31,7 +32,7 @@ export default function DashboardLayout() {
             left="4"
             zIndex="1000"
             bg="white"
-            onClick={() => setOpen(true)}
+            onClick={() => onOpen()}
           >
             <HamburgerIcon />
           </IconButton>
@@ -42,11 +43,11 @@ export default function DashboardLayout() {
             opacity={open ? 1 : 0}
             transition="opacity 0.25s ease"
             pointerEvents={open ? "auto" : "none"}
-            onClick={() => setOpen(false)}
+            onClick={() => onClose()}
             zIndex="999"
           />
 
-          <Box
+            <Box
             position="fixed"
             top="0"
             left="0"
@@ -55,14 +56,14 @@ export default function DashboardLayout() {
             bg="white"
             color="white"
             boxShadow="xl"
-            transform={open ? "translateX(0)" : "translateX(-100%)"}
+              transform={open ? "translateX(0)" : "translateX(-100%)"}
             transition="transform 0.25s ease"
             zIndex="1000"
             display="flex"
             flexDirection="column"
           >
             <Flex justify="flex-end" p="3" width="100%">
-              <IconButton aria-label="Close menu" bg="white" color="black" size="lg" onClick={() => setOpen(false)}>
+              <IconButton aria-label="Close menu" bg="white" color="black" size="lg" onClick={() => onClose()}>
                 <ChevronLeftIcon/>
               </IconButton>
             </Flex>
@@ -80,7 +81,16 @@ export default function DashboardLayout() {
       {/* Content */}
       <Flex direction="column" flex="1" minW="0">
         <Header />
-        <Box flex="1" bg="gray.900" />
+
+        <Box p="4" flex="1" overflowY="auto">
+          {/* Main content goes here */}
+          {/* Mount the roaster content (planner) here */}
+          <Box>
+            {/* Loaded component */}
+            {/* Import lazily to keep layout fast */}
+            <RoasterContent />
+          </Box>
+        </Box>
       </Flex>
     </Flex>
   );

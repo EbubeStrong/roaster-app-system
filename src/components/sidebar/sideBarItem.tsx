@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Box, Flex, Text, TooltipContent, TooltipPositioner, TooltipRoot, TooltipTrigger, Image } from "@chakra-ui/react";
+import { Box, Flex, Text, Image } from "@chakra-ui/react";
 import { SidebarItemProps } from "../layouts/sidebar";
 
 const SidebarItem = React.forwardRef<HTMLDivElement, SidebarItemProps & { onClick?: () => void }>(
@@ -54,12 +54,9 @@ const SidebarItem = React.forwardRef<HTMLDivElement, SidebarItemProps & { onClic
     if (!isCollapsed) return content;
 
     return (
-      <TooltipRoot openDelay={150} closeDelay={50} positioning={{ placement: "right" }}>
-        <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipPositioner>
-          <TooltipContent>{label}</TooltipContent>
-        </TooltipPositioner>
-      </TooltipRoot>
+      <Box title={label}>
+        {content}
+      </Box>
     );
   }
 );
