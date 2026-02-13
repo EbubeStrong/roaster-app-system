@@ -18,7 +18,7 @@ export default function DashboardLayout() {
       {!isMobile && (
         <SidebarContent
           isCollapsed={isCollapsed}
-          toggleCollapse={() => setIsCollapsed((prev) => !prev)}
+          toggleCollapse={() => setIsCollapsed((previousState) => !previousState)}
           showCollapseToggle
         />
       )}

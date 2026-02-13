@@ -41,17 +41,17 @@ export default function SidebarContent({ isCollapsed, toggleCollapse, showCollap
     const updateIndicatorPosition = () => {
       // Hide indicator when group or sidebar is closed
       if (!openRooster || isCollapsed) {
-        setIndicator((prev) => ({ ...prev, visible: false }));
+        setIndicator((previousIndicator) => ({ ...previousIndicator, visible: false }));
         return;
       }
 
       const activeKey = active;
-      const activeItemEl = activeKey ? roosterRefs.current[activeKey] : null;
-      const containerEl = roosterContainerRef.current;
+      const activeItemElement = activeKey ? roosterRefs.current[activeKey] : null;
+      const containerElement = roosterContainerRef.current;
 
-      if (activeItemEl && containerEl) {
-        const offsetTopRelative = activeItemEl.offsetTop - containerEl.offsetTop;
-        const itemHeight = activeItemEl.offsetHeight;
+      if (activeItemElement && containerElement) {
+        const offsetTopRelative = activeItemElement.offsetTop - containerElement.offsetTop;
+        const itemHeight = activeItemElement.offsetHeight;
         setIndicator({ top: offsetTopRelative, height: itemHeight, visible: true });
       } else {
         setIndicator({ top: 0, height: 0, visible: false });
@@ -106,7 +106,7 @@ export default function SidebarContent({ isCollapsed, toggleCollapse, showCollap
             p="3"
             borderRadius="md"
             cursor="pointer"
-            onClick={() => setOpenRooster((v) => !v)}
+            onClick={() => setOpenRooster((previousState) => !previousState)}
             _hover={{ bg: "gray.50" }}
           >
             <Box fontSize="18px" color={openRooster ? "blue.500" : "gray.600"}>
@@ -129,7 +129,7 @@ export default function SidebarContent({ isCollapsed, toggleCollapse, showCollap
             <Box position="relative">
               <VStack ref={roosterContainerRef} align="stretch" pl="7" mt="1" gap="4">
                 <SidebarItem
-                  ref={(el) => { roosterRefs.current["mijnRooster"] = el; }}
+                  ref={(element) => { roosterRefs.current["mijnRooster"] = element; }}
                   icon={<MijnRoasterIcon />}
                   label="Mijn Rooster"
                   isCollapsed={isCollapsed}
@@ -137,7 +137,7 @@ export default function SidebarContent({ isCollapsed, toggleCollapse, showCollap
                 />
 
                 <SidebarItem
-                  ref={(el) => { roosterRefs.current["planner"] = el; }}
+                  ref={(element) => { roosterRefs.current["planner"] = element; }}
                   icon={<PlannerIcon />}
                   label="Planner"
                   isCollapsed={isCollapsed}
@@ -146,7 +146,7 @@ export default function SidebarContent({ isCollapsed, toggleCollapse, showCollap
                 />
 
                 <SidebarItem
-                  ref={(el) => { roosterRefs.current["instellingen"] = el; }}
+                  ref={(element) => { roosterRefs.current["instellingen"] = element; }}
                   icon={<InstellingenIcon />}
                   label="Instellingen"
                   isCollapsed={isCollapsed}

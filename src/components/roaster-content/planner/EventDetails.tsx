@@ -15,31 +15,31 @@ type Props = {
 };
 
 function getUserInitials(users: Props["users"], userId: string) {
-  const u = users.find((x) => x.id === userId);
-  if (u?.initials) return u.initials;
-  if (u) return u.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  const matchedUser = users.find((user) => user.id === userId);
+  if (matchedUser?.initials) return matchedUser.initials;
+  if (matchedUser) return matchedUser.name.split(" ").map((word) => word[0]).join("").toUpperCase().slice(0, 2);
   return userId.slice(0, 2).toUpperCase();
 }
 
 function getUserName(users: Props["users"], userId: string) {
-  return users.find((x) => x.id === userId)?.name || userId;
+  return users.find((user) => user.id === userId)?.name || userId;
 }
 
 function formatTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  const eventDate = new Date(iso);
+  return eventDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 /** Group events by their start hour, e.g. "11:00", "12:00" */
 function groupByHour(events: PlannerEvent[]): { hour: string; items: PlannerEvent[] }[] {
   const map = new Map<string, PlannerEvent[]>();
-  const sorted = [...events].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  const sorted = [...events].sort((eventA, eventB) => new Date(eventA.start).getTime() - new Date(eventB.start).getTime());
 
-  for (const ev of sorted) {
-    const d = new Date(ev.start);
-    const hourKey = `${d.getHours().toString().padStart(2, "0")}:00`;
+  for (const event of sorted) {
+    const eventDate = new Date(event.start);
+    const hourKey = `${eventDate.getHours().toString().padStart(2, "0")}:00`;
     if (!map.has(hourKey)) map.set(hourKey, []);
-    map.get(hourKey)!.push(ev);
+    map.get(hourKey)!.push(event);
   }
 
   return Array.from(map.entries()).map(([hour, items]) => ({ hour, items }));
@@ -108,18 +108,18 @@ export default function EventDetails({ events, date, users, onClose }: Props) {
 
               {/* Event cards */}
               <Flex direction="column" gap={2}>
-                {group.items.map((ev) => {
-                  const initials = getUserInitials(users, ev.userId);
-                  const userName = getUserName(users, ev.userId);
-                  const startTime = formatTime(ev.start);
-                  const endTime = formatTime(ev.end);
+                {group.items.map((event) => {
+                  const initials = getUserInitials(users, event.userId);
+                  const userName = getUserName(users, event.userId);
+                  const startTime = formatTime(event.start);
+                  const endTime = formatTime(event.end);
 
                   return (
                     <Box
-                      key={ev.id}
-                      bg={ev.color || "#F7FAFC"}
+                      key={event.id}
+                      bg={event.color || "#F7FAFC"}
                       borderLeftWidth="3px"
-                      borderLeftColor={ev.borderColor || "#A0AEC0"}
+                      borderLeftColor={event.borderColor || "#A0AEC0"}
                       borderRadius="lg"
                       px={3}
                       py={2.5}
@@ -130,7 +130,7 @@ export default function EventDetails({ events, date, users, onClose }: Props) {
                           w="28px"
                           h="28px"
                           borderRadius="full"
-                          bg={ev.borderColor || "gray.400"}
+                          bg={event.borderColor || "gray.400"}
                           color="white"
                           align="center"
                           justify="center"
@@ -145,13 +145,13 @@ export default function EventDetails({ events, date, users, onClose }: Props) {
                         <Box flex="1" minW={0}>
                           <Flex align="center" gap={1.5}>
                             <Text fontWeight="bold" fontSize="sm" lineClamp={1}>
-                              {ev.title}
+                              {event.title}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
                               {startTime} - {endTime}
                             </Text>
                           </Flex>
-                          <Text fontSize="xs" color={ev.borderColor || "gray.500"} mt={0.5}>
+                          <Text fontSize="xs" color={event.borderColor || "gray.500"} mt={0.5}>
                             {userName}
                           </Text>
                         </Box>

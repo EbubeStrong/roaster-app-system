@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Input, Text, Flex } from "@chakra-ui/react";
 import { PlannerEvent } from "./types";
 import { useDemoAuth } from "./DemoAuthProvider";
@@ -17,31 +17,31 @@ const LOCATIONS = ["Behandelingkamer1", "Management", "Bijzonderheden-Verlof-Cur
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (ev: PlannerEvent) => void;
+  onCreate: (event: PlannerEvent) => void;
   currentDate?: Date;
 };
 
 export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate }: Props) {
-  const ctx = useDemoAuth();
-  const resolvedUsers = ctx?.users ?? [];
+  const authContext = useDemoAuth();
+  const resolvedUsers = authContext?.users ?? [];
   const fallbackDate = currentDate ?? new Date();
 
-  const formatDateISO = (d: Date) => {
-    const y = d.getFullYear();
-    const m = (d.getMonth() + 1).toString().padStart(2, "0");
-    const dd = d.getDate().toString().padStart(2, "0");
-    return `${y}-${m}-${dd}`;
+  const formatDateISO = (date: Date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
-  const [title, setTitle] = React.useState("");
-  const [userId, setUserId] = React.useState("");
-  const [location, setLocation] = React.useState(LOCATIONS[0]);
-  const [dateStr, setDateStr] = React.useState("");
-  const [startTime, setStartTime] = React.useState("11:00");
-  const [durationHours, setDurationHours] = React.useState(1);
+  const [title, setTitle] = useState("");
+  const [userId, setUserId] = useState("");
+  const [location, setLocation] = useState(LOCATIONS[0]);
+  const [dateStr, setDateStr] = useState("");
+  const [startTime, setStartTime] = useState("11:00");
+  const [durationHours, setDurationHours] = useState(1);
 
   // Reset fields when modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setTitle("");
       setUserId(resolvedUsers[0]?.id || "");
@@ -61,7 +61,7 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
     endDate.setHours(endDate.getHours() + Number(durationHours));
     const colors = COLUMN_COLORS[location] || { color: "#E8F0FF", borderColor: "#A0AEC0" };
 
-    const ev: PlannerEvent = {
+    const newEvent: PlannerEvent = {
       id: `new-${Date.now()}`,
       title: title || "New Roster",
       start,
@@ -71,10 +71,10 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
       color: colors.color,
       borderColor: colors.borderColor,
     };
-    onCreate(ev);
+    onCreate(newEvent);
   };
 
-  const selectedUserName = resolvedUsers.find((u) => u.id === userId)?.name || "";
+  const selectedUserName = resolvedUsers.find((user) => user.id === userId)?.name || "";
 
   return (
     <Box position="fixed" inset="0" zIndex={9999} display="flex" alignItems="center" justifyContent="center">
@@ -93,7 +93,7 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
             <Text fontSize="xs" fontWeight="600" color="gray.600" mb={1}>Title / Task</Text>
             <Input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(changeEvent) => setTitle(changeEvent.target.value)}
               placeholder="e.g. Surgery, Pijnspecialist, Consultation"
               size="sm"
               borderRadius="md"
@@ -105,11 +105,11 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
             <Text fontSize="xs" fontWeight="600" color="gray.600" mb={1}>Assign to</Text>
             <select
               value={userId}
-              onChange={(e) => setUserId(e.target.value)}
+              onChange={(changeEvent) => setUserId(changeEvent.target.value)}
               style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #E2E8F0", fontSize: "14px" }}
             >
-              {resolvedUsers.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
+              {resolvedUsers.map((user) => (
+                <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
             {selectedUserName && (
@@ -118,7 +118,7 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
                   w="24px" h="24px" borderRadius="full" bg="purple.100" color="purple.600"
                   align="center" justify="center" fontSize="9px" fontWeight="bold" flexShrink={0}
                 >
-                  {selectedUserName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
+                  {selectedUserName.split(" ").map((word) => word[0]).join("").toUpperCase().slice(0, 2)}
                 </Flex>
                 <Text fontSize="sm" color="gray.700">{selectedUserName}</Text>
               </Flex>
@@ -130,11 +130,11 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
             <Text fontSize="xs" fontWeight="600" color="gray.600" mb={1}>Column / Location</Text>
             <select
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(changeEvent) => setLocation(changeEvent.target.value)}
               style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #E2E8F0", fontSize: "14px" }}
             >
-              {LOCATIONS.map((loc) => (
-                <option key={loc} value={loc}>{loc}</option>
+              {LOCATIONS.map((locationName) => (
+                <option key={locationName} value={locationName}>{locationName}</option>
               ))}
             </select>
             {/* Color preview */}
@@ -155,7 +155,7 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
             <Input
               type="date"
               value={dateStr}
-              onChange={(e) => setDateStr(e.target.value)}
+              onChange={(changeEvent) => setDateStr(changeEvent.target.value)}
               size="sm"
               borderRadius="md"
             />
@@ -168,7 +168,7 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
               <Input
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={(changeEvent) => setStartTime(changeEvent.target.value)}
                 size="sm"
                 borderRadius="md"
               />
@@ -177,11 +177,11 @@ export default function NewRosterModal({ isOpen, onClose, onCreate, currentDate 
               <Text fontSize="xs" fontWeight="600" color="gray.600" mb={1}>Duration (hrs)</Text>
               <select
                 value={String(durationHours)}
-                onChange={(e) => setDurationHours(Number(e.target.value))}
+                onChange={(changeEvent) => setDurationHours(Number(changeEvent.target.value))}
                 style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #E2E8F0", fontSize: "14px" }}
               >
-                {[0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8].map((n) => (
-                  <option key={n} value={n}>{n}h</option>
+                {[0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8].map((durationOption) => (
+                  <option key={durationOption} value={durationOption}>{durationOption}h</option>
                 ))}
               </select>
             </Box>

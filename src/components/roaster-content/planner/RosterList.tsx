@@ -17,55 +17,50 @@ type Props = {
 const DAYS = ["m", "di", "w", "do", "vr"] as const;
 
 function getInitials(name: string) {
-  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  return name.split(" ").map((word) => word[0]).join("").toUpperCase().slice(0, 2);
 }
 
 function formatShortDate(iso: string) {
-  const d = new Date(iso);
+  const eventDate = new Date(iso);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${months[d.getMonth()]} ${d.getDate()}`;
+  return `${months[eventDate.getMonth()]} ${eventDate.getDate()}`;
 }
 
 /** Derive per-user roster info from actual events */
 function deriveStaffFromEvents(events: PlannerEvent[], users: User[], existingStaff: StaffMember[]) {
   const userEventMap = new Map<string, PlannerEvent[]>();
-  for (const ev of events) {
-    if (!userEventMap.has(ev.userId)) userEventMap.set(ev.userId, []);
-    userEventMap.get(ev.userId)!.push(ev);
+  for (const event of events) {
+    if (!userEventMap.has(event.userId)) userEventMap.set(event.userId, []);
+    userEventMap.get(event.userId)!.push(event);
   }
 
   const allUserIds = new Set<string>();
-  users.forEach((u) => allUserIds.add(u.id));
-  existingStaff.forEach((s) => allUserIds.add(s.id));
-  userEventMap.forEach((_, uid) => allUserIds.add(uid));
+  users.forEach((user) => allUserIds.add(user.id));
+  existingStaff.forEach((staffMember) => allUserIds.add(staffMember.id));
+  userEventMap.forEach((_, userId) => allUserIds.add(userId));
 
   const result: (StaffMember & { assignedEvents: PlannerEvent[] })[] = [];
 
-  for (const uid of allUserIds) {
-    const existing = existingStaff.find((s) => s.id === uid);
-    const user = users.find((u) => u.id === uid);
-    const evs = userEventMap.get(uid) || [];
-
-    const assignedHours = evs.reduce((sum, ev) => {
-      const ms = new Date(ev.end).getTime() - new Date(ev.start).getTime();
-      return sum + ms / 3600000;
-    }, 0);
+  for (const currentUserId of allUserIds) {
+    const existing = existingStaff.find((staffMember) => staffMember.id === currentUserId);
+    const user = users.find((currentUser) => currentUser.id === currentUserId);
+    const userEvents = userEventMap.get(currentUserId) || [];
 
     let dateRange = existing?.dateRange || "";
-    if (evs.length > 0) {
-      const sorted = [...evs].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    if (userEvents.length > 0) {
+      const sorted = [...userEvents].sort((eventA, eventB) => new Date(eventA.start).getTime() - new Date(eventB.start).getTime());
       const earliest = formatShortDate(sorted[0].start);
       const latest = formatShortDate(sorted[sorted.length - 1].start);
       dateRange = earliest === latest ? earliest : `${earliest} - ${latest}`;
     }
 
-    const name = user?.name || existing?.name || uid;
+    const name = user?.name || existing?.name || currentUserId;
 
     // Users with events are always "available", others use existing status or default to "on-leave"
-    const finalStatus = evs.length > 0 ? "available" : (existing?.status ?? "on-leave");
+    const finalStatus = userEvents.length > 0 ? "available" : (existing?.status ?? "on-leave");
 
     result.push({
-      id: uid,
+      id: currentUserId,
       name,
       initials: user?.initials || existing?.initials || getInitials(name),
       totalHours: 1158.0,
@@ -73,14 +68,14 @@ function deriveStaffFromEvents(events: PlannerEvent[], users: User[], existingSt
       dateRange,
       status: finalStatus,
       days: existing?.days ?? ["m", "di", "w", "do", "vr"],
-      assignedEvents: evs,
+      assignedEvents: userEvents,
     });
   }
 
-  result.sort((a, b) => {
-    if (a.assignedEvents.length && !b.assignedEvents.length) return -1;
-    if (!a.assignedEvents.length && b.assignedEvents.length) return 1;
-    return a.name.localeCompare(b.name);
+  result.sort((staffA, staffB) => {
+    if (staffA.assignedEvents.length && !staffB.assignedEvents.length) return -1;
+    if (!staffA.assignedEvents.length && staffB.assignedEvents.length) return 1;
+    return staffA.name.localeCompare(staffB.name);
   });
 
   return result;
@@ -103,16 +98,16 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
     [events, users, staff]
   );
 
-  const filtered = derivedStaff.filter((s) => {
-    if (tab === "available" && s.status === "on-leave") return false;
-    if (tab === "on-leave" && s.status !== "on-leave") return false;
-    if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false;
+  const filtered = derivedStaff.filter((staffMember) => {
+    if (tab === "available" && staffMember.status === "on-leave") return false;
+    if (tab === "on-leave" && staffMember.status !== "on-leave") return false;
+    if (search && !staffMember.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
   const allCount = derivedStaff.length;
-  const availableCount = derivedStaff.filter((s) => s.status === "available").length;
-  const onLeaveCount = derivedStaff.filter((s) => s.status === "on-leave").length;
+  const availableCount = derivedStaff.filter((staffMember) => staffMember.status === "available").length;
+  const onLeaveCount = derivedStaff.filter((staffMember) => staffMember.status === "on-leave").length;
 
   return (
     <Box w="340px" bg="white" h="100%" overflow="auto" flexShrink={0}>
@@ -144,7 +139,7 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
             placeholder="Search"
             size="sm"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(changeEvent) => setSearch(changeEvent.target.value)}
             _placeholder={{ color: "gray.400" }}
           />
         </Flex>
@@ -165,9 +160,9 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
 
       {/* Tabs */}
       <Flex px={4} gap={6} mb={4} borderBottomWidth="1px" borderColor="gray.100">
-        <TabBtn label="All" count={allCount} active={tab === "all"} onClick={() => setTab("all")} />
-        <TabBtn label="Available" count={availableCount} active={tab === "available"} onClick={() => setTab("available")} />
-        <TabBtn label="On Leave" count={onLeaveCount} active={tab === "on-leave"} onClick={() => setTab("on-leave")} />
+        <TabButton label="All" count={allCount} active={tab === "all"} onClick={() => setTab("all")} />
+        <TabButton label="Available" count={availableCount} active={tab === "available"} onClick={() => setTab("available")} />
+        <TabButton label="On Leave" count={onLeaveCount} active={tab === "on-leave"} onClick={() => setTab("on-leave")} />
       </Flex>
 
       {/* Staff list */}
@@ -175,9 +170,9 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
         {filtered.length === 0 && (
           <Text fontSize="sm" color="gray.400" textAlign="center" py={6}>No staff found</Text>
         )}
-        {filtered.map((s, staffIdx) => (
+        {filtered.map((staffMember, staffIndex) => (
           <Box
-            key={s.id}
+            key={staffMember.id}
             bg="white"
             borderWidth="1px"
             borderColor="gray.100"
@@ -185,6 +180,13 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
             p={4}
             mb={3}
             boxShadow="sm"
+            draggable
+            cursor="grab"
+            _active={{ cursor: "grabbing" }}
+            onDragStart={(dragEvent) => {
+              dragEvent.dataTransfer.setData("text/plain", staffMember.id);
+              dragEvent.dataTransfer.effectAllowed = "copy";
+            }}
           >
             <Flex gap={3}>
               {/* Initials circle */}
@@ -202,23 +204,23 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
                 fontWeight="bold"
                 flexShrink={0}
               >
-                {s.initials}
+                {staffMember.initials}
               </Flex>
 
               {/* Content */}
               <Box flex="1" minW={0}>
                 {/* Name row with status */}
                 <Flex align="center" justify="space-between" mb={1}>
-                  <Text fontWeight="semibold" fontSize="sm" color="gray.800">{s.name}</Text>
+                  <Text fontWeight="semibold" fontSize="sm" color="gray.800">{staffMember.name}</Text>
                   <Flex align="center" gap={1}>
                     <Box
                       w="6px"
                       h="6px"
                       borderRadius="full"
-                      bg={s.status === "on-leave" ? "red.400" : "green.400"}
+                      bg={staffMember.status === "on-leave" ? "red.400" : "green.400"}
                     />
-                    <Text fontSize="xs" color={s.status === "on-leave" ? "red.500" : "green.500"}>
-                      {s.status === "on-leave" ? "On leave" : "Active"}
+                    <Text fontSize="xs" color={staffMember.status === "on-leave" ? "red.500" : "green.500"}>
+                      {staffMember.status === "on-leave" ? "On leave" : "Active"}
                     </Text>
                   </Flex>
                 </Flex>
@@ -226,23 +228,23 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
                 {/* Hours row */}
                 <Flex align="center" gap={3} mb={1}>
                   <Flex align="center" gap={1} bg="gray.100" borderRadius="md" px={2} py={0.5}>
-                    <Text fontSize="xs" color="gray.600" fontWeight="medium">{s.totalHours.toFixed(1)}hrs</Text>
+                    <Text fontSize="xs" color="gray.600" fontWeight="medium">{staffMember.totalHours.toFixed(1)}hrs</Text>
                   </Flex>
                   <Flex align="center" gap={1} bg="gray.100" borderRadius="md" px={2} py={0.5}>
-                    <Text fontSize="xs" color="gray.600" fontWeight="medium">{s.weeklyHours.toFixed(1)}hrs</Text>
+                    <Text fontSize="xs" color="gray.600" fontWeight="medium">{staffMember.weeklyHours.toFixed(1)}hrs</Text>
                   </Flex>
                 </Flex>
 
                 {/* Date range row with day indicators */}
                 <Flex align="center" justify="space-between">
                   <Text fontSize="xs" color="blue.500" fontWeight="medium">
-                    {s.dateRange || `Jan ${2 + staffIdx * 4} - Jan ${9 + staffIdx * 6}`}
+                    {staffMember.dateRange || `Jan ${2 + staffIndex * 4} - Jan ${9 + staffIndex * 6}`}
                   </Text>
                   
                   {/* Day indicators */}
                   <Flex gap={1}>
-                    {DAYS.map((day, dayIdx) => {
-                      const colors = getDayColor(dayIdx, staffIdx);
+                    {DAYS.map((day, dayIndex) => {
+                      const colors = getDayColor(dayIndex, staffIndex);
                       return (
                         <Box
                           key={day}
@@ -269,7 +271,7 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
   );
 }
 
-function TabBtn({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
+function TabButton({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
   return (
     <Box
       cursor="pointer"
