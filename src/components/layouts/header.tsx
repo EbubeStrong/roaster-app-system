@@ -17,7 +17,7 @@ import {
 	MenuSeparator,
 	MenuTrigger,
 } from "@chakra-ui/react";
-import { FiGrid, FiSettings, FiBell, FiChevronDown } from "react-icons/fi";
+import { Element3, Setting2, Notification, ArrowDown2 } from "iconsax-reactjs";
 
 export default function Header() {
 	const cardBg = "#f3f6fb";
@@ -48,7 +48,7 @@ export default function Header() {
 					variant="ghost"
 					bg={cardBg}
 				>
-					<Icon as={FiGrid} boxSize={5} color={iconColor} />
+					<Icon as={Element3} boxSize={5} color={iconColor} />
 				</IconButton>
 				<IconButton
 					aria-label="Settings"
@@ -56,7 +56,7 @@ export default function Header() {
 					variant="ghost"
 					bg={cardBg}
 				>
-					<Icon as={FiSettings} boxSize={5} />
+					<Icon as={Setting2} boxSize={5} />
 				</IconButton>
 				<Box position="relative">
 					<IconButton
@@ -65,7 +65,7 @@ export default function Header() {
 						variant="ghost"
 						bg={cardBg}
 					>
-						<Icon as={FiBell} boxSize={5} />
+						<Icon as={Notification} boxSize={5} />
 					</IconButton>
 					<Box
 						position="absolute"
@@ -101,7 +101,7 @@ export default function Header() {
 								Paul@dstrct.com
 							</Text>
 						</VStack>
-						<Icon as={FiChevronDown} boxSize={4} color="gray.500" />
+						<Icon as={ArrowDown2} boxSize={4} color="gray.500" />
 					</HStack>
 				</MenuTrigger>
 

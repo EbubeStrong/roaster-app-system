@@ -1,15 +1,15 @@
 "use client";
-import React, { useState } from "react";
-import { Box, Button, Text, Flex } from "@chakra-ui/react";
-import { FiChevronLeft, FiChevronRight, FiSliders, FiFilter } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { Box, Button, Text, Flex, Spinner } from "@chakra-ui/react";
+import { ArrowLeft2, ArrowRight2, Candle2, Filter } from "iconsax-reactjs";
 import DemoAuthProvider, { useDemoAuth } from "./DemoAuthProvider";
 import PlannerCalendar from "./PlannerCalendar";
 import MonthView from "./MonthView";
 import RosterPanel from "./RosterList";
 import NewRosterModal from "./NewRosterModal";
-import { plannerEvents, liveEvents, sampleStaff } from "./mockEvents";
+import { plannerEvents, liveEvents, sampleStaff } from "../../../types/mockEvents";
 import EventDetails from "./EventDetails";
-import { PlannerEvent } from "./types";
+import { PlannerEvent } from "../../../types/types";
 
 /** Color map for auto-assigning colors when dropping a user on a column */
 const COLUMN_COLORS: Record<string, { color: string; borderColor: string }> = {
@@ -31,6 +31,7 @@ function PlannerInner() {
     const [showRoster, setShowRoster] = useState(false);
     const [thisDayOpen, setThisDayOpen] = useState(false);
     const [thisDayLabel, setThisDayLabel] = useState("This day");
+    const [isLoading, setIsLoading] = useState(false);
 
     // Current events depend on viewMode
     const events = viewMode === "planner" ? planEvents : liveEventsList;
@@ -46,6 +47,7 @@ function PlannerInner() {
 
     // Navigation — in month view, go prev/next month
     const goToNextDay = () => {
+        setIsLoading(true);
         if (calendarView === "month") {
             setCurrentDate((previousDate) => new Date(previousDate.getFullYear(), previousDate.getMonth() + 1, 1));
         } else {
@@ -53,6 +55,7 @@ function PlannerInner() {
         }
     };
     const goToPrevDay = () => {
+        setIsLoading(true);
         if (calendarView === "month") {
             setCurrentDate((previousDate) => new Date(previousDate.getFullYear(), previousDate.getMonth() - 1, 1));
         } else {
@@ -76,7 +79,7 @@ function PlannerInner() {
         const startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), hour, minute);
         const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour default
 
-        const colours = COLUMN_COLORS[column] || { color: "#F7FAFC", borderColor: "#A0AEC0" };
+        const colors = COLUMN_COLORS[column] || { color: "#fff", borderColor: "#A0AEC0" };
 
         const newEvent: PlannerEvent = {
             id: `drop-${Date.now()}`,
@@ -85,8 +88,8 @@ function PlannerInner() {
             end: endDate.toISOString(),
             userId: user.id,
             location: column,
-            color: colours.color,
-            borderColor: colours.borderColor,
+            color: colors.color,
+            borderColor: colors.borderColor,
         };
 
         setEvents((previousEvents) => [...previousEvents, newEvent]);
@@ -98,20 +101,30 @@ function PlannerInner() {
 
     // When switching modes, change the date context
     const switchToLive = () => {
+        setIsLoading(true);
         setViewMode("live");
         setCurrentDate(new Date()); // Live = today
     };
     const switchToPlanner = () => {
+        setIsLoading(true);
         setViewMode("planner");
         setCurrentDate(new Date("2025-09-08")); // Planner = future schedule date
     };
 
+    // Clear loading state after mode/date transitions
+    useEffect(() => {
+        if (isLoading) {
+            const loadTimer = setTimeout(() => setIsLoading(false), 400);
+            return () => clearTimeout(loadTimer);
+        }
+    }, [isLoading, viewMode, currentDate, calendarView]);
+
     return (
         <Box>
             {/* Page header */}
-            <Flex align="center" justify="space-between" mb={2}>
-                <Text fontSize="2xl" fontWeight="bold" color="gray.800">Planner</Text>
-                <Flex gap={2} align="center">
+            <Flex align="center" justify="space-between" mb={2} flexWrap="wrap" gap={2}>
+                <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="gray.800">Planner</Text>
+                <Flex gap={2} align="center" flexWrap="wrap">
                     <Button variant="outline" size="sm" borderRadius="md" fontSize="xs" color="gray.600">
                         <Text mr={1}>&#9662;</Text> Open Days
                     </Button>
@@ -122,159 +135,135 @@ function PlannerInner() {
             </Flex>
 
             {/* Live / Planner toggle */}
-            <Flex mb={4} borderWidth="1px" borderColor={viewMode === "planner" ? "#DDD6FE" : "red"} borderRadius="full" px={1} py={1} display="flex" alignItems="center" gap={1} bg={viewMode === "planner" ? "#F5F3FF" : "red.50"}>
+            <Flex mb={4} borderWidth="1px" borderColor={viewMode === "planner" ? "#DDD6FE" : "#FECACA"} borderRadius="full" px={1} py={0.5} display="flex" alignItems="center" gap={0} bg={viewMode === "planner" ? "#F5F3FF" : "#FEF2F2"}>
                 <Flex
                     as="button"
                     align="center"
+                    justify="center"
                     gap={1.5}
                     borderRadius="full"
                     px={4}
-                    py={1.5}
+                    py={1}
                     bg={viewMode === "live" ? "white" : "transparent"}
-                    boxShadow={viewMode === "live" ? "sm" : "none"}
+                    boxShadow={viewMode === "live" ? "0 1px 3px rgba(0,0,0,0.08)" : "none"}
+                    borderWidth="1px"
+                    borderColor={viewMode === "live" ? "#EF4444" : "transparent"}
                     cursor="pointer"
                     onClick={switchToLive}
                     transition="all 0.15s"
                     flexShrink={0}
                 >
-                    {viewMode === "live" && <Box w="8px" h="8px" borderRadius="full" bg="red.500" />}
+                    {viewMode === "live" && <Box w="7px" h="7px" borderRadius="full" bg="#EF4444" flexShrink={0} />}
                     <Text fontSize="sm" fontWeight={viewMode === "live" ? "600" : "400"} color={viewMode === "live" ? "gray.800" : "gray.500"}>Live</Text>
                 </Flex>
-                <Button
-                    size="sm"
+                <Flex
+                    as="button"
+                    align="center"
+                    justify="center"
                     borderRadius="full"
+                    px={4}
+                    py={1}
                     bg={viewMode === "planner" ? "#4F46E5" : "transparent"}
                     color={viewMode === "planner" ? "white" : "gray.500"}
-                    _hover={{ bg: viewMode === "planner" ? "#4338CA" : "gray.100" }}
+                    boxShadow={viewMode === "planner" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"}
+                    cursor="pointer"
                     onClick={switchToPlanner}
-                    px={5}
-                    fontWeight="600"
+                    fontWeight={viewMode === "planner" ? "600" : "400"}
                     fontSize="sm"
                     transition="all 0.15s"
                     flexShrink={0}
                 >
                     Planner
-                </Button>
-                <Text fontSize="sm" color="gray.400" ml={2} flex="1">
+                </Flex>
+                <Text fontSize="sm" color="gray.400" ml={3} flex="1" display={{ base: "none", md: "block" }}>
                     {viewMode === "planner" ? "Description of the planner view" : "Description of the live"}
                 </Text>
             </Flex>
 
             {/* Toolbar row */}
-            <Flex align="center" mb={3} h="36px">
+            <Flex align="center" mb={3} minH="36px" flexWrap="wrap" gap={2}>
                 {/* Left: date */}
-                <Flex align="baseline" gap={0} flexShrink={0} border="1px solid gray" borderRadius="full" px={2} py={0.5}>
-                    <Text fontSize="xs" color="gray.400" mr={1}>{dayNamesDutch[currentDate.getDay()]}</Text>
-                    <Text fontSize="xs" color="gray.400" fontWeight="600" mr={2}>{currentDate.getDate()}</Text>
+                <Flex align="center" gap={2} flexShrink={0}>
+                    <Flex align="baseline" gap={0} flexShrink={0} border="1px solid gray" borderRadius="full" px={2} py={0.5}>
+                        <Text fontSize="xs" color="gray.400" mr={1}>{dayNamesDutch[currentDate.getDay()]}</Text>
+                        <Text fontSize="xs" color="gray.400" fontWeight="600" mr={2}>{currentDate.getDate()}</Text>
+                    </Flex>
+                    <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="gray.800" whiteSpace="nowrap">{monthNames[currentDate.getMonth()]}, {currentDate.getFullYear()}</Text>
                 </Flex>
-                <Text fontSize="lg" fontWeight="bold" ml="3" color="gray.800">{monthNames[currentDate.getMonth()]}, {currentDate.getFullYear()}</Text>
 
                 {/* Spacer */}
-                <Box flex="1" />
+                <Box flex="1" display={{ base: "none", lg: "block" }} />
 
                 {/* Right: controls */}
-                <Flex align="center" gap={1.5}>
-                    {/* Day / Month view toggle */}
-                    <Flex
-                        as="button"
-                        align="center"
-                        h="28px"
-                        px={3}
-                        borderRadius="full"
-                        borderWidth="1px"
-                        borderColor={calendarView === "day" ? "blue.300" : "gray.200"}
-                        color={calendarView === "day" ? "blue.600" : "gray.600"}
-                        bg={calendarView === "day" ? "blue.50" : "white"}
-                        fontSize="xs"
-                        fontWeight="500"
-                        _hover={{ bg: "blue.50" }}
-                        onClick={() => setCalendarView("day")}
-                    >
-                        Day
-                    </Flex>
-                    <Flex
-                        as="button"
-                        align="center"
-                        h="28px"
-                        px={3}
-                        borderRadius="full"
-                        borderWidth="1px"
-                        borderColor={calendarView === "month" ? "blue.300" : "gray.200"}
-                        color={calendarView === "month" ? "blue.600" : "gray.600"}
-                        bg={calendarView === "month" ? "blue.50" : "white"}
-                        fontSize="xs"
-                        fontWeight="500"
-                        _hover={{ bg: "blue.50" }}
-                        onClick={() => setCalendarView("month")}
-                    >
-                        Month
-                    </Flex>
-
-                    {/* Separator */}
-                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} />
-
+                <Flex align="center" gap={1.5} flexWrap="wrap">
                     {/* Settings icon */}
                     <Box color="gray.400" cursor="pointer" _hover={{ color: "gray.600" }} p={1}>
-                        <FiSliders size={15} />
+                        <Candle2 size={15} />
                     </Box>
                     {/* Filter icon */}
                     <Box color="gray.400" cursor="pointer" _hover={{ color: "gray.600" }} p={1}>
-                        <FiFilter size={15} />
+                        <Filter size={15} />
                     </Box>
 
                     {/* Separator */}
-                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} />
+                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} display={{ base: "none", md: "block" }} />
 
-                    {/* Prev / Next */}
-                    <Flex
-                        as="button"
-                        align="center"
-                        justify="center"
-                        w="28px" h="28px"
-                        borderRadius="md"
-                        borderWidth="1px"
-                        borderColor="gray.200"
-                        color="gray.500"
-                        _hover={{ bg: "gray.50" }}
-                        onClick={goToPrevDay}
-                    >
-                        <FiChevronLeft size={14} />
-                    </Flex>
+                    {/* Prev / Current day / Next - connected group */}
+                    <Flex align="center" gap={0}>
+                        <Flex
+                            as="button"
+                            align="center"
+                            justify="center"
+                            w="28px" h="28px"
+                            borderWidth="1px"
+                            borderColor="gray.200"
+                            borderRightWidth="0"
+                            borderLeftRadius="md"
+                            borderRightRadius="0"
+                            color="gray.500"
+                            _hover={{ bg: "gray.50" }}
+                            onClick={goToPrevDay}
+                        >
+                            <ArrowLeft2 size={14} />
+                        </Flex>
 
-                    <Flex
-                        as="button"
-                        align="center"
-                        h="28px"
-                        px={3}
-                        borderRadius="full"
-                        borderWidth="1px"
-                        borderColor="gray.200"
-                        color="gray.600"
-                        fontSize="xs"
-                        fontWeight="500"
-                        _hover={{ bg: "gray.50" }}
-                        onClick={goToToday}
-                    >
-                        Current day
-                    </Flex>
+                        <Flex
+                            as="button"
+                            align="center"
+                            h="28px"
+                            px={3}
+                            borderWidth="1px"
+                            borderColor="gray.200"
+                            borderRadius="0"
+                            color="gray.600"
+                            fontSize="xs"
+                            fontWeight="500"
+                            _hover={{ bg: "gray.50" }}
+                            onClick={goToToday}
+                        >
+                            Current day
+                        </Flex>
 
-                    <Flex
-                        as="button"
-                        align="center"
-                        justify="center"
-                        w="28px" h="28px"
-                        borderRadius="md"
-                        borderWidth="1px"
-                        borderColor="gray.200"
-                        color="gray.500"
-                        _hover={{ bg: "gray.50" }}
-                        onClick={goToNextDay}
-                    >
-                        <FiChevronRight size={14} />
+                        <Flex
+                            as="button"
+                            align="center"
+                            justify="center"
+                            w="28px" h="28px"
+                            borderWidth="1px"
+                            borderColor="gray.200"
+                            borderLeftWidth="0"
+                            borderRightRadius="md"
+                            borderLeftRadius="0"
+                            color="gray.500"
+                            _hover={{ bg: "gray.50" }}
+                            onClick={goToNextDay}
+                        >
+                            <ArrowRight2 size={14} />
+                        </Flex>
                     </Flex>
 
                     {/* Separator */}
-                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} />
+                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} display={{ base: "none", md: "block" }} />
 
                     {/* This day dropdown */}
                     <Box position="relative">
@@ -332,8 +321,8 @@ function PlannerInner() {
                         )}
                     </Box>
 
-                    {/* Separator */}
-                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} />
+                    {/* Separator - hidden on small screens when wrapped */}
+                    <Box w="1px" h="16px" bg="gray.200" mx={0.5} display={{ base: "none", md: "block" }} />
 
                     {/* Publish All */}
                     <Flex
@@ -348,6 +337,7 @@ function PlannerInner() {
                         fontSize="xs"
                         fontWeight="500"
                         _hover={{ bg: "gray.50" }}
+                        flexShrink={0}
                     >
                         Publish All
                     </Flex>
@@ -366,6 +356,7 @@ function PlannerInner() {
                         fontSize="xs"
                         fontWeight="500"
                         _hover={{ bg: "gray.50" }}
+                        flexShrink={0}
                     >
                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                             <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3" fill="none" />
@@ -377,19 +368,35 @@ function PlannerInner() {
             </Flex>
 
             {/* Main body: optional roster panel + calendar */}
-            <Flex borderWidth="1px" borderColor="gray.100" borderRadius="lg" overflow="hidden" bg="white" h="calc(100vh - 260px)">
+            <Flex borderWidth="1px" borderColor="gray.100" borderRadius="lg" overflow="hidden" bg="white" h={{ base: "calc(100vh - 320px)", md: "calc(100vh - 260px)" }} direction={{ base: "column", md: "row" }}>
                 {showRoster && (
                     <RosterPanel staff={sampleStaff} events={events} users={users} onClose={() => setShowRoster(false)} />
                 )}
-                <Box flex="1" overflow="auto">
+                <Box flex="1" overflow="auto" position="relative">
+                    {isLoading && (
+                        <Flex position="absolute" inset="0" zIndex={10} bg="whiteAlpha.800" align="center" justify="center">
+                            <Spinner size="lg" color="blue.500" borderWidth="3px" />
+                        </Flex>
+                    )}
                     {calendarView === "day" ? (
-                        <PlannerCalendar
+                        events.filter((event) => {
+                            const eventDate = new Date(event.start);
+                            return eventDate.toDateString() === currentDate.toDateString();
+                        }).length === 0 && !isLoading ? (
+                            <Flex align="center" justify="center" h="100%" direction="column" gap={3}>
+                                <Text fontSize="4xl">📅</Text>
+                                <Text fontSize="lg" fontWeight="600" color="gray.500">No events scheduled</Text>
+                                <Text fontSize="sm" color="gray.400">There are no events for this day. Click &quot;+ Nieuw&quot; to create one.</Text>
+                            </Flex>
+                        ) : (
+                            <PlannerCalendar
                             events={events}
                             onEventClick={handleEventClick}
                             onDropUser={handleDropUser}
                             date={currentDate}
                             users={users}
                         />
+                        )
                     ) : (
                         <MonthView
                             events={events}

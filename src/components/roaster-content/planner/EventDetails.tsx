@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { FiX } from "react-icons/fi";
-import { PlannerEvent } from "./types";
+import { CloseCircle } from "iconsax-reactjs";
+import { PlannerEvent } from "../../../types/types";
 
 type Props = {
   /** All events in the clicked column */
@@ -93,7 +93,7 @@ export default function EventDetails({ events, date, users, onClose }: Props) {
             cursor="pointer"
             p={1}
           >
-            <FiX size={18} />
+            <CloseCircle size={18} />
           </Box>
         </Flex>
 

@@ -1,7 +1,7 @@
 ﻿"use client";
 import React from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { PlannerEvent } from "./types";
+import { PlannerEvent } from "../../../types/types";
 
 type Props = {
   events: PlannerEvent[];
@@ -12,11 +12,11 @@ type Props = {
 };
 
 const COLUMNS = [
-  { key: "Days", label: "Days", color: "#FFF0EE", headerBg: "#FFF0EE", headerColor: "#C53030" },
-  { key: "Behandelingkamer1", label: "Behandelingkamer1", color: "#E8F5E9", headerBg: "#E8F5E9", headerColor: "#276749" },
-  { key: "Management", label: "Management", color: "#FFF8E1", headerBg: "#FFF8E1", headerColor: "#975A16" },
-  { key: "Bijzonderheden-Verlof-Cursus-BZV", label: "Bijzonderheden-Verlof-Cursus-...", color: "#EBF8FF", headerBg: "#EBF8FF", headerColor: "#2B6CB0" },
-  { key: "Financien", label: "Financien", color: "#FFF8E1", headerBg: "#FFF8E1", headerColor: "#975A16" },
+  { key: "Days", label: "Days", color: "#EDE9FE", headerBg: "#EDE9FE", headerColor: "#5B21B6" },
+  { key: "Behandelingkamer1", label: "Behandelingkamer1", color: "#E8F5E9", headerBg: "#E2E4E9", headerColor: "#5D636F" },
+  { key: "Management", label: "Management", color: "#FFF8E1", headerBg: "#E2E4E9", headerColor: "#5D636F" },
+  { key: "Bijzonderheden-Verlof-Cursus-BZV", label: "Bijzonderheden-Verlof-Cursus-...", color: "#EBF8FF", headerBg: "#E2E4E9", headerColor: "#5D636F" },
+  { key: "Financien", label: "Financien", color: "#FFF8E1", headerBg: "#E2E4E9", headerColor: "#5D636F" },
 ];
 
 export { COLUMNS };
@@ -95,23 +95,48 @@ export default function PlannerCalendar({ events, onEventClick, onDropUser, user
   };
 
   return (
-    <Flex overflow="auto" position="relative">
-      {/* Days column (time labels only) */}
-      {(() => {
-        const daysCol = COLUMNS[0];
-        return (
-          <Box w="80px" flexShrink={0} position="relative" borderRightWidth="1px" borderColor="gray.100">
+    <Box position="relative" h="100%" display="flex" flexDirection="column">
+      {/* Sticky header row */}
+      <Flex flexShrink={0} position="sticky" top={0} zIndex={5} bg="white">
+        {/* Days header */}
+        <Box w="80px" flexShrink={0} borderRightWidth="1px" borderColor="gray.100">
+          <Box
+            h={`${HEADER_HEIGHT}px`}
+            bg={COLUMNS[0].headerBg}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            px={3}
+            borderBottomWidth="2px"
+            borderColor={COLUMNS[0].headerColor}
+          >
+            <Text fontSize="xs" fontWeight="600" color={COLUMNS[0].headerColor}>{COLUMNS[0].label}</Text>
+          </Box>
+        </Box>
+        {/* Column headers */}
+        {COLUMNS.slice(1).map((column) => (
+          <Box key={column.key} flex="1" minW="160px" borderRightWidth="1px" borderColor="gray.100">
             <Box
               h={`${HEADER_HEIGHT}px`}
-              bg={daysCol.headerBg}
+              bg={column.headerBg}
               display="flex"
               alignItems="center"
+              justifyContent="center"
               px={3}
               borderBottomWidth="2px"
-              borderColor={daysCol.headerColor}
+              borderColor={column.headerColor}
             >
-              <Text fontSize="xs" fontWeight="600" color={daysCol.headerColor}>{daysCol.label}</Text>
+              <Text fontSize="xs" fontWeight="600" color={column.headerColor} lineClamp={1}>{column.label}</Text>
             </Box>
+          </Box>
+        ))}
+      </Flex>
+
+      {/* Scrollable body */}
+      <Box flex="1" overflow="auto">
+        <Flex position="relative">
+          {/* Days column (time labels only) */}
+          <Box w="80px" flexShrink={0} position="relative" borderRightWidth="1px" borderColor="gray.100">
             <Box position="relative" h={`${gridHeight}px`}>
               {halfHours.map(({ hour, minute }, slotIndex) => (
                 <Box
@@ -139,121 +164,109 @@ export default function PlannerCalendar({ events, onEventClick, onDropUser, user
               ))}
             </Box>
           </Box>
-        );
-      })()}
 
-      {/* Schedulable columns with drop zones */}
-      {COLUMNS.slice(1).map((column) => {
-        const columnEvents = eventsForColumn(column.key);
-        const showSeeAll = hasOverlap(columnEvents);
+          {/* Schedulable columns with drop zones */}
+          {COLUMNS.slice(1).map((column) => {
+            const columnEvents = eventsForColumn(column.key);
+            const showSeeAll = hasOverlap(columnEvents);
 
-        return (
-          <Box key={column.key} flex="1" minW="160px" borderRightWidth="1px" borderColor="gray.100" position="relative">
-            <Box
-              h={`${HEADER_HEIGHT}px`}
-              bg={column.headerBg}
-              display="flex"
-              alignItems="center"
-              px={3}
-              borderBottomWidth="2px"
-              borderColor={column.headerColor}
-            >
-              <Text fontSize="xs" fontWeight="600" color={column.headerColor} lineClamp={1}>{column.label}</Text>
-            </Box>
+            return (
+              <Box key={column.key} flex="1" minW="160px" borderRightWidth="1px" borderColor="gray.100" position="relative">
+                <Box position="relative" h={`${gridHeight}px`}>
+                  {halfHours.map(({ hour, minute }, slotIndex) => {
+                    const cellId = `${column.key}-${hour}-${minute}`;
+                    const isOver = dragOverCell === cellId;
+                    return (
+                      <Box
+                        key={slotIndex}
+                        position="absolute"
+                        left={0}
+                        right={0}
+                        top={`${slotIndex * HALF_HOUR_HEIGHT}px`}
+                        h={`${HALF_HOUR_HEIGHT}px`}
+                        borderBottomWidth="1px"
+                        borderColor={slotIndex % 2 === 1 ? "gray.100" : "gray.50"}
+                        bg={isOver ? "blue.50" : "transparent"}
+                        transition="background 0.1s"
+                        onDragOver={(dragEvent) => handleDragOver(dragEvent, column.key, hour, minute)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(dragEvent) => handleDrop(dragEvent, column.key, hour, minute)}
+                      />
+                    );
+                  })}
 
-            <Box position="relative" h={`${gridHeight}px`}>
-              {halfHours.map(({ hour, minute }, slotIndex) => {
-                const cellId = `${column.key}-${hour}-${minute}`;
-                const isOver = dragOverCell === cellId;
-                return (
-                  <Box
-                    key={slotIndex}
-                    position="absolute"
-                    left={0}
-                    right={0}
-                    top={`${slotIndex * HALF_HOUR_HEIGHT}px`}
-                    h={`${HALF_HOUR_HEIGHT}px`}
-                    borderBottomWidth="1px"
-                    borderColor={slotIndex % 2 === 1 ? "gray.100" : "gray.50"}
-                    bg={isOver ? "blue.50" : "transparent"}
-                    transition="background 0.1s"
-                    onDragOver={(dragEvent) => handleDragOver(dragEvent, column.key, hour, minute)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(dragEvent) => handleDrop(dragEvent, column.key, hour, minute)}
-                  />
-                );
-              })}
+                  {columnEvents.map((event) => {
+                    const top = topForTime(event.start);
+                    const height = heightForEvent(event.start, event.end);
+                    const initials = getUserInitials(users, event.userId);
+                    const userName = getUserName(users, event.userId);
+                    const startTime = new Date(event.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+                    const endTime = new Date(event.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 
-              {columnEvents.map((event) => {
-                const top = topForTime(event.start);
-                const height = heightForEvent(event.start, event.end);
-                const initials = getUserInitials(users, event.userId);
-                const userName = getUserName(users, event.userId);
-                const startTime = new Date(event.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-                const endTime = new Date(event.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-
-                return (
-                  <Box
-                    key={event.id}
-                    position="absolute"
-                    left="4px"
-                    right="4px"
-                    top={`${top}px`}
-                    height={`${height}px`}
-                    bg={event.color || "#F7FAFC"}
-                    borderLeftWidth="3px"
-                    borderLeftColor={event.borderColor || "#A0AEC0"}
-                    borderRadius="6px"
-                    p={2}
-                    cursor="pointer"
-                    onClick={() => onEventClick(event)}
-                    overflow="hidden"
-                    _hover={{ boxShadow: "sm" }}
-                    transition="box-shadow 0.15s"
-                    zIndex={2}
-                    pointerEvents="auto"
-                  >
-                    <Flex align="center" gap={1} mb={0.5}>
-                      <Flex
-                        w="20px" h="20px" borderRadius="full"
-                        bg={event.borderColor || "gray.300"} color="white"
-                        align="center" justify="center" fontSize="8px" fontWeight="bold" flexShrink={0}
+                    return (
+                      <Box
+                        key={event.id}
+                        position="absolute"
+                        left="4px"
+                        right="4px"
+                        top={`${top}px`}
+                        height={`${height}px`}
+                        bg={event.color || "#F7FAFC"}
+                        borderLeftWidth="3px"
+                        borderLeftColor={event.borderColor || "#A0AEC0"}
+                        borderRadius="6px"
+                        p={2}
+                        cursor="pointer"
+                        onClick={() => onEventClick(event)}
+                        overflow="hidden"
+                        _hover={{ boxShadow: "sm" }}
+                        transition="box-shadow 0.15s"
+                        zIndex={2}
+                        pointerEvents="auto"
                       >
-                        {initials}
-                      </Flex>
-                    </Flex>
-                    <Text fontWeight="bold" fontSize="xs" lineClamp={1}>{event.title}</Text>
-                    <Text fontSize="xs" color={event.borderColor || "gray.500"}>{startTime} - {endTime}</Text>
-                    <Text fontSize="xs" color={event.borderColor || "gray.500"} mt={0.5}>{userName}</Text>
-                  </Box>
-                );
-              })}
+                        <Flex align="center" gap={1} mb={0.5}>
+                          <Flex
+                            w="20px" h="20px" borderRadius="full"
+                            bg={event.borderColor || "gray.300"} color="white"
+                            align="center" justify="center" fontSize="8px" fontWeight="bold" flexShrink={0}
+                          >
+                            {initials}
+                          </Flex>
+                        </Flex>
+                        <Text fontWeight="bold" fontSize="xs" lineClamp={1}>{event.title}</Text>
+                        <Text fontSize="xs" color={event.borderColor || "gray.500"}>{startTime} - {endTime}</Text>
+                        <Text fontSize="xs" color={event.borderColor || "gray.500"} mt={0.5}>{userName}</Text>
+                      </Box>
+                    );
+                  })}
 
-              {showSeeAll && (
-                <Box
-                  position="absolute"
-                  left="50%"
-                  transform="translateX(-50%)"
-                  top={`${(3 * HALF_HOUR_HEIGHT) - 10}px`}
-                  bg="white"
-                  borderWidth="1px"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  px={3}
-                  py={1}
-                  cursor="pointer"
-                  boxShadow="sm"
-                  _hover={{ boxShadow: "md" }}
-                  zIndex={10}
-                  onClick={() => { if (columnEvents.length > 0) onEventClick(columnEvents[0]); }}
-                >
-                  <Text fontSize="xs" color="gray.600" fontWeight="500">See all</Text>
+                  {showSeeAll && (
+                    <Box
+                      position="absolute"
+                      left="50%"
+                      transform="translateX(-50%)"
+                      top={`${(3 * HALF_HOUR_HEIGHT) - 10}px`}
+                      bg="white"
+                      borderWidth="1px"
+                      borderColor="gray.200"
+                      borderRadius="md"
+                      px={3}
+                      py={1}
+                      cursor="pointer"
+                      boxShadow="sm"
+                      _hover={{ boxShadow: "md" }}
+                      zIndex={10}
+                      onClick={() => { if (columnEvents.length > 0) onEventClick(columnEvents[0]); }}
+                    >
+                      <Text fontSize="xs" color="gray.600" fontWeight="500">See all</Text>
+                    </Box>
+                  )}
                 </Box>
-              )}
-            </Box>
-          </Box>
-        );
-      })}
-    </Flex>
+              </Box>
+            );
+          })}
+        </Flex>
+      </Box>
+    </Box>
   );
 }

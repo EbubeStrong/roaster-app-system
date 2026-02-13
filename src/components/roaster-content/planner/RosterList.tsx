@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import { Box, Text, Flex, Input } from "@chakra-ui/react";
-import { FiSearch, FiFilter } from "react-icons/fi";
-import { PlannerEvent, StaffMember } from "./types";
+import { SearchNormal1, Filter } from "iconsax-reactjs";
+import { PlannerEvent, StaffMember } from "../../../types/types";
 
 type User = { id: string; name: string; initials?: string };
 
@@ -134,7 +134,7 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
           px={3}
           py={2}
         >
-          <Box color="gray.400"><FiSearch size={16} /></Box>
+          <Box color="gray.400"><SearchNormal1 size={16} /></Box>
           <Input
             placeholder="Search"
             size="sm"
@@ -154,7 +154,7 @@ export default function RosterPanel({ staff, events, users, onClose }: Props) {
           cursor="pointer"
           _hover={{ bg: "gray.50" }}
         >
-          <Box color="gray.400"><FiFilter size={16} /></Box>
+          <Box color="gray.400"><Filter size={16} /></Box>
         </Flex>
       </Flex>
 

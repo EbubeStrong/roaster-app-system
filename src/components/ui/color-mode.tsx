@@ -4,7 +4,7 @@ import * as React from "react"
 import { ThemeProvider, useTheme } from "next-themes"
 import type { ThemeProviderProps } from "next-themes"
 import { IconButton, type IconButtonProps } from "@chakra-ui/react"
-import { LuMoon, LuSun } from "react-icons/lu"
+import { Moon, Sun1 } from "iconsax-reactjs"
 
 export function ColorModeProvider(props: ThemeProviderProps) {
   return (
@@ -42,7 +42,7 @@ export function useColorModeValue<T>(light: T, dark: T) {
 
 export function ColorModeIcon() {
   const { colorMode } = useColorMode()
-  return colorMode === "dark" ? <LuMoon /> : <LuSun />
+  return colorMode === "dark" ? <Moon size={20} /> : <Sun1 size={20} />
 }
 
 export const ColorModeButton = React.forwardRef<HTMLButtonElement, Omit<IconButtonProps, "aria-label">>(

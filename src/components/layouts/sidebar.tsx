@@ -8,9 +8,7 @@ import {
 
 } from "@chakra-ui/react";
 
-import {
-  FiChevronDown,
-} from "react-icons/fi";
+import { ArrowDown2 } from "iconsax-reactjs";
 import SidebarItem from "../sidebar/sideBarItem";
 import { useEffect, useRef, useState } from "react";
 import { DepartmentNewsIcon, DocumentManagementIcon, DoProtocolsIcon, GeneralNewsIcon, HamburgerIcon, InstellingenIcon, KnowledgeBaseIcon, LogoIcon, MijnRoasterIcon, PlannerIcon, RoasterIcon, Startpagina } from "@/assets/icons/iconsItems";
@@ -119,7 +117,7 @@ export default function SidebarContent({ isCollapsed, toggleCollapse, showCollap
                   Rooster
                 </Text>
                 <Box color="gray.500">
-                  <FiChevronDown />
+                  <ArrowDown2 size={16} />
                 </Box>
               </>
             )}

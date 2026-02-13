@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Box, Button, Input, Text, Flex } from "@chakra-ui/react";
-import { PlannerEvent } from "./types";
+import { PlannerEvent } from "../../../types/types";
 import { useDemoAuth } from "./DemoAuthProvider";
 
 /** Each column has a specific bg + border color */

@@ -1,7 +1,7 @@
 "use client";
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { PlannerEvent } from "./types";
+import { PlannerEvent } from "../../../types/types";
 
 type Props = {
   events: PlannerEvent[];
@@ -58,7 +58,10 @@ export default function MonthView({ events, date, onDayClick, users }: Props) {
   const year = date.getFullYear();
   const month = date.getMonth();
   const cells = getMonthGrid(year, month);
-  const today = new Date();
+
+  // handling hydration mismatch by using useSyncExternalStore to get current date on client side only
+  const emptySubscribe = () => () => {};
+  const today = useSyncExternalStore(emptySubscribe, () => new Date(), () => null);
 
   // Group events by date key "YYYY-MM-DD"
   const eventsByDate = new Map<string, PlannerEvent[]>();
@@ -86,7 +89,7 @@ export default function MonthView({ events, date, onDayClick, users }: Props) {
           {cells.slice(weekIndex * 7, weekIndex * 7 + 7).map((cell, dayIndex) => {
             const dateKey = `${cell.year}-${String(cell.month).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
             const dayEvents = eventsByDate.get(dateKey) || [];
-            const isToday =
+            const isToday = today !== null &&
               cell.day === today.getDate() &&
               cell.month === today.getMonth() &&
               cell.year === today.getFullYear();
